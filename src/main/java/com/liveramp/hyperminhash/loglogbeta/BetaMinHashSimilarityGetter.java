@@ -1,4 +1,4 @@
-package com.liveramp.hyperminhash;
+package com.liveramp.hyperminhash.loglogbeta;
 
 class BetaMinHashSimilarityGetter {
   public static double similarity(BetaMinHash... sketches) {

@@ -1,4 +1,4 @@
-package com.liveramp.hyperminhash;
+package com.liveramp.hyperminhash.loglogbeta;
 
 class BetaMinHashIntersectionGetter {
   public static long getIntersection(BetaMinHash... sketches) {

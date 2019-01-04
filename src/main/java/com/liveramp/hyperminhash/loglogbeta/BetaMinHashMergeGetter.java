@@ -1,4 +1,4 @@
-package com.liveramp.hyperminhash;
+package com.liveramp.hyperminhash.loglogbeta;
 
 class BetaMinHashMergeGetter {
   static BetaMinHash merge(BetaMinHash... sketches) {

@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import com.liveramp.hyperminhash.BetaMinHash;
+import com.liveramp.hyperminhash.loglogbeta.BetaMinHash;
 
 public class DemoBetaMinHash {
   private static final int NUM_THREADS = 15;

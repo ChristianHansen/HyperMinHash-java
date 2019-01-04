@@ -1,4 +1,4 @@
-package com.liveramp.hyperminhash;
+package com.liveramp.hyperminhash.loglogbeta;
 
 import java.util.HashMap;
 import java.util.HashSet;
