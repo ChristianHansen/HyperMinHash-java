@@ -1,5 +1,6 @@
 package com.liveramp.hyperminhash.loglogbeta;
 
+import com.liveramp.hyperminhash.CardinalitySketch;
 import java.nio.ByteBuffer;
 
 import util.hash.MetroHash128;
@@ -23,7 +24,7 @@ import util.hash.MetroHash128;
  * If you'd like this class to support custom Q or R or P values, please open a github issue.
  * <p>
  */
-public class BetaMinHash {
+public class BetaMinHash implements CardinalitySketch  {
   // HLL Precision parameter
   public final static int P = 14;
   public final static int NUM_REGISTERS = (int)Math.pow(2, P);
@@ -49,6 +50,7 @@ public class BetaMinHash {
     this(other.registers);
   }
 
+  @Override
   public void add(byte[] val) {
     MetroHash128 hash = new MetroHash128(1337).apply(ByteBuffer.wrap(val));
     ByteBuffer buf = ByteBuffer.allocate(16);
@@ -123,6 +125,7 @@ public class BetaMinHash {
     return (short)((leftmostOnebitPosition << R) | rightmostRBits);
   }
 
+  @Override
   public long cardinality() {
     return BetaMinHashCardinalityGetter.cardinality(this);
   }
