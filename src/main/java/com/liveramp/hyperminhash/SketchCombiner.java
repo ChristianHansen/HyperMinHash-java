@@ -21,4 +21,5 @@ public interface SketchCombiner<T extends IntersectionSketch> {
    * cardinality of the union of those ses.
    */
   double similarity(T... sketches);
+
 }

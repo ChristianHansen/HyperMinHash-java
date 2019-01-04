@@ -21,6 +21,9 @@ import util.hash.MetroHash128;
  * current values should provide sufficient accuracy for set cardinalities up to 2^89 (see Hyperminhash paper for
  * reference).
  * <p>
+ * If you want to be able to combine multiple BetaMinHash instances, or compute their intersection,
+ * you can use {@link BetaMinHashCombiner}.
+ * <p>
  * If you'd like this class to support custom Q or R or P values, please open a github issue.
  * <p>
  */
