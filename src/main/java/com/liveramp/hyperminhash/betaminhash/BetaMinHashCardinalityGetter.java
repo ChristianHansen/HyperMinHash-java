@@ -1,4 +1,4 @@
-package com.liveramp.hyperminhash.loglogbeta;
+package com.liveramp.hyperminhash.betaminhash;
 
 class BetaMinHashCardinalityGetter {
   public static long cardinality(BetaMinHash sketch) {

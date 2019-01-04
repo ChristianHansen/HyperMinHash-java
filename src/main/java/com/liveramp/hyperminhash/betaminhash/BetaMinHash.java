@@ -1,6 +1,6 @@
-package com.liveramp.hyperminhash.loglogbeta;
+package com.liveramp.hyperminhash.betaminhash;
 
-import com.liveramp.hyperminhash.CardinalitySketch;
+import com.liveramp.hyperminhash.IntersectionSketch;
 import java.nio.ByteBuffer;
 
 import util.hash.MetroHash128;
@@ -24,7 +24,7 @@ import util.hash.MetroHash128;
  * If you'd like this class to support custom Q or R or P values, please open a github issue.
  * <p>
  */
-public class BetaMinHash implements CardinalitySketch  {
+public class BetaMinHash implements IntersectionSketch {
   // HLL Precision parameter
   public final static int P = 14;
   public final static int NUM_REGISTERS = (int)Math.pow(2, P);
@@ -51,17 +51,36 @@ public class BetaMinHash implements CardinalitySketch  {
   }
 
   @Override
-  public void add(byte[] val) {
+  public long cardinality() {
+    return BetaMinHashCardinalityGetter.cardinality(this);
+  }
+
+  @Override
+  public boolean offer(byte[] val) {
     MetroHash128 hash = new MetroHash128(1337).apply(ByteBuffer.wrap(val));
     ByteBuffer buf = ByteBuffer.allocate(16);
     hash.writeBigEndian(buf);
-    addHash(buf);
+    return addHash(buf);
+  }
+
+  @Override
+  public int sizeInBytes() {
+    return NUM_REGISTERS * Short.BYTES;
+  }
+
+  @Override
+  public byte[] getBytes() {
+    ByteBuffer byteBuffer = ByteBuffer.allocate(sizeInBytes());
+    for (short s : registers) {
+      byteBuffer.putShort(s);
+    }
+    return byteBuffer.array();
   }
 
   /**
    * @param _128BitHash
    */
-  private void addHash(ByteBuffer _128BitHash) {
+  private boolean addHash(ByteBuffer _128BitHash) {
     if (_128BitHash.array().length != 16) {
       throw new IllegalArgumentException("input hash should be 16 bytes");
     }
@@ -77,7 +96,10 @@ public class BetaMinHash implements CardinalitySketch  {
     short packedRegister = packIntoRegister(leftmostOneBitPosition, rBits);
     if (registers[registerIndex] < packedRegister) {
       registers[registerIndex] = packedRegister;
+      return true;
     }
+
+    return false;
   }
 
   private int getLeftmostPBits(long hash) {
@@ -123,38 +145,5 @@ public class BetaMinHash implements CardinalitySketch  {
     // Q is at most 6, which means that with R<=10, we should be able to store these two
     // numbers in the same register
     return (short)((leftmostOnebitPosition << R) | rightmostRBits);
-  }
-
-  @Override
-  public long cardinality() {
-    return BetaMinHashCardinalityGetter.cardinality(this);
-  }
-
-  /**
-   * @return Merged sketch representing the input sketches
-   */
-  public static BetaMinHash merge(BetaMinHash... sketches) {
-    return BetaMinHashMergeGetter.merge(sketches);
-  }
-
-  /**
-   * @return Union cardinality estimation
-   */
-  public static long union(BetaMinHash... sketches) {
-    return merge(sketches).cardinality();
-  }
-
-  /**
-   * @return Intersection cardinality estimation
-   */
-  public static long intersection(BetaMinHash... sketches) {
-    return BetaMinHashIntersectionGetter.getIntersection(sketches);
-  }
-
-  /**
-   * @return Jaccard index estimation
-   */
-  public static double similarity(BetaMinHash... sketches) {
-    return BetaMinHashSimilarityGetter.similarity(sketches);
   }
 }
