@@ -1,21 +1,20 @@
 package com.liveramp.hyperminhash.betaminhash;
 
 class BetaMinHashCardinalityGetter {
-  public static long cardinality(BetaMinHash sketch) {
+  static long cardinality(BetaMinHash sketch) {
     // Formula (2) in Qin et al.
     SumAndZeros saz = getRegisterSumAndZeros(sketch);
     double sum = saz.sum;
     double zeros = saz.zeros;
-    double mHat = (double)sketch.NUM_REGISTERS;
-    double alpha = alpha(sketch.NUM_REGISTERS);
-    long cardinality = (long)(alpha * mHat * (mHat - zeros) / (beta(zeros) + sum));
-    return cardinality;
+    double mHat = (double)BetaMinHash.NUM_REGISTERS;
+    double alpha = alpha(BetaMinHash.NUM_REGISTERS);
+    return (long)(alpha * mHat * (mHat - zeros) / (beta(zeros) + sum));
   }
 
   private static SumAndZeros getRegisterSumAndZeros(BetaMinHash sketch) {
     double sum = 0, uninitializedRegisters = 0;
     for (short register : sketch.registers) {
-      byte leadingZeros = leadingZeros(register, sketch.Q);
+      byte leadingZeros = leadingZeros(register, BetaMinHash.Q);
       if (leadingZeros == 0) {
         uninitializedRegisters++;
       }
@@ -65,14 +64,14 @@ class BetaMinHashCardinalityGetter {
   }
 
   private static class SumAndZeros {
-    public final double sum;
-    public final double zeros;
+    final double sum;
+    final double zeros;
 
     /**
      * @param sum
      * @param zeros
      */
-    public SumAndZeros(double sum, double zeros) {
+    SumAndZeros(double sum, double zeros) {
       this.zeros = zeros;
       this.sum = sum;
     }
