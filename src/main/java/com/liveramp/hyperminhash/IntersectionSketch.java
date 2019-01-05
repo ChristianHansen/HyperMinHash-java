@@ -2,6 +2,11 @@ package com.liveramp.hyperminhash;
 
 import java.io.Serializable;
 
+/**
+ * Representation of a set that is able to estimate the cardinality of that set, and perform the
+ * operations in SketchCombiner. Each implementation of this interface should have a corresponding
+ * implementation of SketchCombiner.
+ */
 public interface IntersectionSketch extends Serializable {
 
   /**

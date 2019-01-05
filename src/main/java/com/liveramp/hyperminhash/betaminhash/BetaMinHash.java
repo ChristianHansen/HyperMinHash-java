@@ -29,14 +29,14 @@ import util.hash.MetroHash128;
  */
 public class BetaMinHash implements IntersectionSketch {
   // HLL Precision parameter
-  public final static int P = 14;
-  public final static int NUM_REGISTERS = (int)Math.pow(2, P);
+  public static final int P = 14;
+  public static final int NUM_REGISTERS = (int)Math.pow(2, P);
 
 
   // TODO add actual validation if necessary
   // Q + R must always be <= 16 since we're packing values into 16 bit registers
-  public final static int Q = 6;
-  public final static int R = 10;
+  public static final int Q = 6;
+  public static final int R = 10;
 
   final short[] registers;
 
@@ -49,6 +49,7 @@ public class BetaMinHash implements IntersectionSketch {
     System.arraycopy(registers, 0, this.registers, 0, registers.length);
   }
 
+  /** Create a deep copy of another {@link BetaMinHash}. */
   public BetaMinHash(BetaMinHash other) {
     this(other.registers);
   }

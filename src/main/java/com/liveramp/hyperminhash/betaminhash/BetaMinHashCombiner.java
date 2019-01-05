@@ -1,9 +1,8 @@
 package com.liveramp.hyperminhash.betaminhash;
 
 import com.liveramp.hyperminhash.SketchCombiner;
-import java.io.Serializable;
 
-public class BetaMinHashCombiner implements SketchCombiner<BetaMinHash>, Serializable {
+public class BetaMinHashCombiner implements SketchCombiner<BetaMinHash> {
 
   private static final BetaMinHashCombiner INSTANCE = new BetaMinHashCombiner();
   private static final long serialVersionUID = 1L;

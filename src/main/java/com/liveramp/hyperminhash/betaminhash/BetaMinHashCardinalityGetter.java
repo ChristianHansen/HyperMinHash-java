@@ -31,8 +31,8 @@ class BetaMinHashCardinalityGetter {
    * Alpha parameter as shown in Figure 3 of the Hyperloglog paper by Flajolet, Philippe, et al. found here:
    * http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf.
    *
-   * @param hllSize
-   * @return
+   * @param hllSize number of registers used in the HLL.
+   * @return the alpha value
    */
   private static double alpha(int hllSize) {
     switch (hllSize) {
@@ -49,7 +49,7 @@ class BetaMinHashCardinalityGetter {
 
   /**
    * @param zeros The number of leading 0s in the first (2^Q)-1 bits
-   * @return
+   * @return the beta value
    */
   private static double beta(double zeros) {
     double log = Math.log(zeros + 1);
