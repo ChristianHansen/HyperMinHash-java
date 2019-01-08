@@ -1,6 +1,7 @@
 package com.liveramp.hyperminhash.betaminhash;
 
 import com.liveramp.hyperminhash.IntersectionSketch;
+import com.liveramp.hyperminhash.bithelper.BitHelper;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import util.hash.MetroHash128;
@@ -49,13 +50,6 @@ public class BetaMinHash implements IntersectionSketch {
 
   private BetaMinHash(short[] registers) {
     this.registers = registers;
-  }
-
-  /**
-   * Create a deep copy of another {@link BetaMinHash}.
-   */
-  public static BetaMinHash deepCopy(BetaMinHash other) {
-    return deepCopyFromRegisters(other.registers);
   }
 
   /**
@@ -141,6 +135,11 @@ public class BetaMinHash implements IntersectionSketch {
     return Arrays.hashCode(registers);
   }
 
+  @Override
+  public BetaMinHash deepCopy() {
+    return deepCopyFromRegisters(this.registers);
+  }
+
   /**
    * @param _128BitHash
    */
@@ -152,10 +151,10 @@ public class BetaMinHash implements IntersectionSketch {
     long hashLeftHalf = _128BitHash.getLong(0);
     long hashRightHalf = _128BitHash.getLong(8);
 
-    int registerIndex = getLeftmostPBits(hashLeftHalf);
-    short rBits = getRightmostRBits(hashLeftHalf);
+    int registerIndex = (int) BitHelper.getLeftmostBits(hashLeftHalf, P);
+    short rBits = (short) BitHelper.getRightmostBits(hashRightHalf, R);
 
-    byte leftmostOneBitPosition = getLeftmostOneBitPosition(hashRightHalf);
+    byte leftmostOneBitPosition = BitHelper.getLeftmostOneBitPosition(hashRightHalf, Q);
 
     short packedRegister = packIntoRegister(leftmostOneBitPosition, rBits);
     if (registers[registerIndex] < packedRegister) {
@@ -164,34 +163,6 @@ public class BetaMinHash implements IntersectionSketch {
     }
 
     return false;
-  }
-
-  private int getLeftmostPBits(long hash) {
-    return (int) (hash >>> (Long.SIZE - P));
-  }
-
-  /**
-   * Finds the position of the leftmost one-bit in the first (2^Q)-1 bits.
-   */
-  private byte getLeftmostOneBitPosition(long hash) {
-    // To find the position of the leftmost 1-bit in the first (2^Q)-1 bits
-    // We zero out all bits to the right of the first (2^Q)-1 bits then add a
-    // 1-bit in the 2^Qth position of the bits to search. This way if the bits we're
-    // searching are all 0, we take the position of the leftmost 1-bit to be 2^Q
-    int _2q = (1 << Q) - 1;
-    int shiftAmount = (Long.SIZE - _2q);
-
-    // zero all bits to the right of the first (2^Q)-1 bits
-    long _2qSearchBits = ((hash >>> shiftAmount) << shiftAmount);
-
-    // add a 1-bit in the 2^Qth position
-    _2qSearchBits += (1 << (shiftAmount - 1));
-
-    return (byte) (Long.numberOfLeadingZeros(_2qSearchBits) + 1);
-  }
-
-  private short getRightmostRBits(long hash) {
-    return (short) (hash << (Long.SIZE - R) >>> Long.SIZE - R);
   }
 
   /**

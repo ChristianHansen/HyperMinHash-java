@@ -31,5 +31,10 @@ public interface IntersectionSketch extends Serializable {
    */
   byte[] getBytes();
 
+  /**
+   * @return a deep copy of the {@link IntersectionSketch} instance.
+   */
+  IntersectionSketch deepCopy();
+
 }
 

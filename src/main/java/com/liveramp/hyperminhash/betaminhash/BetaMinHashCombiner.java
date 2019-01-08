@@ -21,12 +21,12 @@ public class BetaMinHashCombiner implements SketchCombiner<BetaMinHash> {
     }
 
     if (sketches.length == 1) {
-      return BetaMinHash.deepCopy(sketches[0]);
+      return sketches[0].deepCopy();
     }
 
     int numRegisters = sketches[0].registers.length;
 
-    BetaMinHash mergedSketch = BetaMinHash.deepCopy(sketches[0]);
+    final BetaMinHash mergedSketch = sketches[0].deepCopy();
     for (int i = 0; i < numRegisters; i++) {
       for (BetaMinHash sketch : sketches) {
         mergedSketch.registers[i] = max(
