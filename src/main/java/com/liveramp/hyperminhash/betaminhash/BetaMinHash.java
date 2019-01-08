@@ -149,12 +149,14 @@ public class BetaMinHash implements IntersectionSketch {
     }
 
     long hashLeftHalf = _128BitHash.getLong(0);
-    long hashRightHalf = _128BitHash.getLong(8);
-
     int registerIndex = (int) BitHelper.getLeftmostBits(hashLeftHalf, P);
-    short rBits = (short) BitHelper.getRightmostBits(hashRightHalf, R);
-
-    byte leftmostOneBitPosition = BitHelper.getLeftmostOneBitPosition(hashRightHalf, Q);
+    short leftmostOneBitPosition = BitHelper.getLeftmostOneBitPosition(_128BitHash.array(), P, Q);
+    /* We take the rightmost bits as what's called h_hat3 in the paper. Note that his differs from
+     * the diagram in the paper which draws a parallel to a mantissa in a floating point
+     * representation, but still satisfies the criterion of serving as an independent hash function
+     * by selecting a set of independent bits from a larger hash. This is slightly simpler to
+     * implement. */
+    short rBits = (short) BitHelper.getRightmostBits(_128BitHash.array(), R);
 
     short packedRegister = packIntoRegister(leftmostOneBitPosition, rBits);
     if (registers[registerIndex] < packedRegister) {
@@ -169,9 +171,11 @@ public class BetaMinHash implements IntersectionSketch {
    * Creates a new tuple/register value for the LL-Beta by bit-packing the number of leading zeros
    * with the rightmost R bits.
    */
-  private short packIntoRegister(byte leftmostOnebitPosition, short rightmostRBits) {
+  private short packIntoRegister(short leftmostOnebitPosition, short rightmostRBits) {
     // Q is at most 6, which means that with R<=10, we should be able to store these two
     // numbers in the same register
-    return (short) ((leftmostOnebitPosition << R) | rightmostRBits);
+    final int exponent = leftmostOnebitPosition << R;
+    final int packedRegister = (exponent | rightmostRBits);
+    return (short) packedRegister;
   }
 }
