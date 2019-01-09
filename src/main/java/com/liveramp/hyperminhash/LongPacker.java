@@ -1,7 +1,7 @@
 package com.liveramp.hyperminhash;
 
 /**
- * Class used to pack a
+ * Class used to pack a long with the position of the first zero in a bitstring and trailing bits.
  */
 class LongPacker {
 

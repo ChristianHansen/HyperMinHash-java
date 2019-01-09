@@ -1,6 +1,10 @@
 package com.liveramp.hyperminhash;
 
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 
 class HmhCardinalityEstimator implements Serializable {
 
@@ -901,36 +905,92 @@ class HmhCardinalityEstimator implements Serializable {
           -704.050000000047, -850.486000000034, -757.43200000003, -713.308999999892,}
   };
 
-  //TODO bias data
-
   /**
    * @return a estimate of the cardinality of the elements represented by the HyperMinHash packed
    *     registers by determining the number of leading zeroes of hash represented by each packed
    *     register, and using HLL-based estimation from there.
    */
-  long estimateCardinality(long[] packedRegisters, int numZeroSearchBits, int r) {
-    final long basicEstimate = basicHllEstimate(packedRegisters, numZeroSearchBits, r);
+  static long estimateCardinality(long[] packedRegisters, int p, int r) {
+    if ((2 << p) != packedRegisters.length) {
+      throw new IllegalStateException();
+    }
+
+    final long basicEstimate = basicHllEstimate(packedRegisters, r);
+    //TODO(christianhansen) a nice-to-have here could be using a different estimator for large
+    // cardinalities, like the k-smallest element-based estimation from Yu and Weber.
     if (basicEstimate < ((5 * packedRegisters.length) / 2)) {
-      return linearCountingEstimate(packedRegisters, numZeroSearchBits, r);
+      return Math.round(linearCountingEstimate(packedRegisters));
     } else {
-      final long basicEstimate =
+      final double[] estimatesForPrecision = rawEstimateData[p - MIN_P];
+      final double[] biasesForPrecision = biasData[p - MIN_P];
+      if (basicEstimate > estimatesForPrecision[estimatesForPrecision.length - 1]
+          || p >= MIN_P + estimatesForPrecision.length) {
+        // We don't correct for bias when either the precision or estimate is too high for the bias
+        // correction data.
+        return basicEstimate;
+      }
+
+      return Math.round(
+          biasCorrectEstimate(basicEstimate, estimatesForPrecision, biasesForPrecision)
+      );
     }
   }
 
-  private long basicHllEstimate(long[] packedRegisters, int q, int r) {
+  private static long basicHllEstimate(long[] packedRegisters, int r) {
     double denominator = 0.0;
     for (long register : packedRegisters) {
-      denominator += Math.pow(2, -1 * (LongPacker.unpackPositionOfFirstOne(register, r)));
+      denominator += Math.pow(2, -1 * LongPacker.unpackPositionOfFirstOne(register, r));
     }
 
     final double numerator = alpha(packedRegisters.length)
         * packedRegisters.length
         * packedRegisters.length;
-    return (long) (numerator / denominator);
+    return Math.round(numerator / denominator);
   }
 
-  private long linearCountingEstimate(long[] packedRegisters, int q, int r) {
-    //TODO
+  // Visible for testing.
+  static double linearCountingEstimate(long[] packedRegisters) {
+    int numZeroRegisters = 0;
+    for (long register : packedRegisters) {
+      // Registers with value zero must represent an empty bucket
+      if (register == 0) {
+        numZeroRegisters++;
+      }
+    }
+    return packedRegisters.length * Math.log(
+        ((double) packedRegisters.length) / numZeroRegisters
+    );
+
+  }
+
+  // Take estimation bias into account using linear interpolation between the calculated biases
+  // for raw estimates.
+  // Visible for testing.
+  static double biasCorrectEstimate(
+      final long estimate,
+      final double[] rawEstimates,
+      final double[] biases) {
+
+    final SortedMap<Double, Integer> indexesByDifference = new TreeMap<>();
+    for (int i = 0; i < rawEstimates.length; i++) {
+      indexesByDifference.put(Math.abs(estimate - rawEstimates[i]), i);
+    }
+
+    final Iterator<Double> ascDiffIter = indexesByDifference.keySet().iterator();
+    final double minDiff = ascDiffIter.next();
+    final double secondSmallestDiff = ascDiffIter.next();
+
+    final int smallestDiffIndex = indexesByDifference.get(minDiff);
+    final int secondSmallestDiffIndex = indexesByDifference.get(secondSmallestDiff);
+
+    return new LinearInterpolator().interpolate(
+        new double[]{rawEstimates[smallestDiffIndex], rawEstimates[secondSmallestDiffIndex]},
+        new double[]{
+            rawEstimates[smallestDiffIndex] - biases[smallestDiffIndex],
+            rawEstimates[secondSmallestDiffIndex] - biases[secondSmallestDiffIndex]
+        })
+        .polynomialSplineDerivative()
+        .value(estimate);
   }
 
 
