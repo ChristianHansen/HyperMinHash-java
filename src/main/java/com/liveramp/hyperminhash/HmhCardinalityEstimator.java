@@ -20,12 +20,11 @@ class HmhCardinalityEstimator {
   }
 
   private long getLeadingZeroes(long packedRegister, int q, int r){
-    long numLeadingZeroesQbits = packedRegister >>> r;
-    if (numLeadingZeroesQbits == 0) {
-
+    final long exponent = LongPacker.unpackExponent(packedRegister, q, r);
+    if (exponent == 0) {
+     // This me
     }
   }
-
   private static double alpha(int p) {
     // From the HLL paper
     final int m = 1 << p;

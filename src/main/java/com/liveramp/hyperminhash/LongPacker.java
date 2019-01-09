@@ -12,7 +12,7 @@ class LongPacker {
   }
 
   static int unpackExponent(long register, int q, int r) {
-    final int numUnusedBits = Long.SIZE - r - (1 << q);
+    final int numUnusedBits = Long.SIZE - r - (q + 1);
     return Math.toIntExact(
         // Clear unused bits, then shift the exponent down into the 2^q least significant bits.
         (register << (numUnusedBits)) >>> (numUnusedBits + r)
