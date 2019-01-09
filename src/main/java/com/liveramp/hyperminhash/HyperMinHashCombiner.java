@@ -19,8 +19,8 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
 
     for (int i = 0; i < numRegisters; i++) {
       for (HyperMinHash sketch : sketches) {
-        int currentExponent = LongPacker.unpackPositionOfFirstOne(mergedSketch.packedRegisters[i], q, r);
-        int incomingExponent = LongPacker.unpackPositionOfFirstOne(sketch.packedRegisters[i], q, r);
+        int currentExponent = LongPacker.unpackPositionOfFirstOne(mergedSketch.packedRegisters[i], r);
+        int incomingExponent = LongPacker.unpackPositionOfFirstOne(sketch.packedRegisters[i], r);
 
         if (currentExponent < incomingExponent) {
           mergedSketch.packedRegisters[i] = sketch.packedRegisters[i];

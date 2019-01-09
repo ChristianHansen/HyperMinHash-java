@@ -15,7 +15,7 @@ class LongPacker {
     return register << (Long.SIZE - r) >>> (Long.SIZE - r);
   }
 
-  static int unpackPositionOfFirstOne(long register, int q, int r) {
+  static int unpackPositionOfFirstOne(long register, int r) {
     return Math.toIntExact(register >>> r);
   }
 
