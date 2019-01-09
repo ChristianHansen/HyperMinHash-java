@@ -12,26 +12,16 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
       return sketches[0].deepCopy();
     }
 
-    final int numRegisters = sketches[0].packedRegisters.length;
+    final int numRegisters = sketches[0].registers.length;
     final HyperMinHash mergedSketch = sketches[0].deepCopy();
     int q = mergedSketch.q;
     int r = mergedSketch.r;
 
     for (int i = 0; i < numRegisters; i++) {
       for (HyperMinHash sketch : sketches) {
-        int currentExponent = LongPacker.unpackPositionOfFirstOne(mergedSketch.packedRegisters[i], r);
-        int incomingExponent = LongPacker.unpackPositionOfFirstOne(sketch.packedRegisters[i], r);
 
-        if (currentExponent < incomingExponent) {
-          mergedSketch.packedRegisters[i] = sketch.packedRegisters[i];
-        } else if (currentExponent == incomingExponent) {
-
-          long currentMantissa = LongPacker.unpackMantissa(mergedSketch.packedRegisters[i], r);
-          long incomingMantissa = LongPacker.unpackMantissa(sketch.packedRegisters[i], r);
-
-          if (currentMantissa > incomingMantissa) {
-            mergedSketch.packedRegisters[i] = sketch.packedRegisters[i];
-          }
+        if (HyperMinHash.shouldReplace(mergedSketch.registers[i], sketch.registers[i], q, r)) {
+          mergedSketch.registers[i] = sketch.registers[i];
         }
       }
     }
@@ -58,14 +48,14 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
 
     long c = 0;
     long n = 0;
-    long numRegisters = sketches[0].packedRegisters.length;
+    long numRegisters = sketches[0].registers.length;
 
     for (int i = 0; i < numRegisters; i++) {
-      if (sketches[0].packedRegisters[i] != 0) {
+      if (sketches[0].registers[i] != 0) {
         boolean itemInIntersection = true;
         for (HyperMinHash sketch : sketches) {
           itemInIntersection =
-              itemInIntersection && sketches[0].packedRegisters[i] == sketch.packedRegisters[i];
+              itemInIntersection && sketches[0].registers[i] == sketch.registers[i];
         }
 
         if (itemInIntersection) {
@@ -74,7 +64,7 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
       }
 
       for (HyperMinHash sketch : sketches) {
-        if (sketch.packedRegisters[i] != 0) {
+        if (sketch.registers[i] != 0) {
           n++;
           break;
         }
