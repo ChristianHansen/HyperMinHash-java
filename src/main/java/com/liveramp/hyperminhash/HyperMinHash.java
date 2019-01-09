@@ -1,5 +1,7 @@
 package com.liveramp.hyperminhash;
 
+import com.google.common.base.Preconditions;
+
 public class HyperMinHash implements IntersectionSketch {
 
   private static final int HASH_SEED = 1738;
@@ -12,16 +14,29 @@ public class HyperMinHash implements IntersectionSketch {
    * significant bits i.e. number of leading zeroes is stored in bits r through r + q - 1 of the long.
    */
   final long[] packedRegisters;
-  //TODO validation for these
+  //TODO validation for these. p + numZeroSearchBits = 64
   final int p; // must be at least 4
-  final int q;
+  // This is 2^q + 1 in the HMH paper. We use this to represent the space that we're searching for a
+  // leading zero.
+  final int numZeroSearchBits;
   final int r;
 
   private final HmhCardinalityEstimator cardinalityEstimator;
 
+  public HyperMinHash(int p, int r) {
+    this.p = p;
+    this.numZeroSearchBits = Long.SIZE - p;
+    // Ensure that we can pack the number of leading zeroes and the least significant r bits from
+    // the hash bitstring into a long "register."
+    Preconditions.checkArgument(r < 58);
+    this.r = r;
+
+  }
+
+
   @Override
   public long cardinality() {
-    return cardinalityEstimator.estimateCardinality(packedRegisters, q, r);
+    return cardinalityEstimator.estimateCardinality(packedRegisters, numZeroSearchBits, r);
   }
 
   @Override
