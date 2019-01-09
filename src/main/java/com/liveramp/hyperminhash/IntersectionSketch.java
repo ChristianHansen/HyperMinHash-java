@@ -1,16 +1,14 @@
 package com.liveramp.hyperminhash;
 
-import java.io.Serializable;
-
 /**
  * Representation of a set that is able to estimate the cardinality of that set, and perform the
  * operations in SketchCombiner. Each implementation of this interface should have a corresponding
  * implementation of SketchCombiner.
  */
-public interface IntersectionSketch extends Serializable {
+public interface IntersectionSketch<T extends IntersectionSketch<T>> {
 
   /**
-   * Returns an estimate of the cardinality of sets represented bythe sketch.
+   * Returns an estimate of the cardinality of sets represented by the sketch.
    */
   long cardinality();
 
@@ -20,7 +18,7 @@ public interface IntersectionSketch extends Serializable {
    *              representation, using at least 128 bits for the key where possible is recommended
    *              to maximize accuracy.
    * @return false if the value returned by cardinality() is unaffected by the appearance of o in
-   *     the stream.
+   * the stream.
    */
   boolean offer(byte[] bytes);
 
@@ -37,7 +35,6 @@ public interface IntersectionSketch extends Serializable {
   /**
    * @return a deep copy of the {@link IntersectionSketch} instance.
    */
-  IntersectionSketch deepCopy();
-
+  T deepCopy();
 }
 

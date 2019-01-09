@@ -4,8 +4,8 @@ class HmhCardinalityEstimator {
 
   /**
    * @return a estimate of the cardinality of the elements represented by the HyperMinHash packed
-   *     registers by determining the number of leading zeroes of hash represented by each packed
-   *     register, and using HLL-based estimation from there.
+   * registers by determining the number of leading zeroes of hash represented by each packed
+   * register, and using HLL-based estimation from there.
    */
   long estimateCardinality(long[] packedRegisters, int q, int r) {
 
@@ -19,7 +19,7 @@ class HmhCardinalityEstimator {
 
   }
 
-  private long getLeadingZeroes(long packedRegister, int q, int r){
+  private long getLeadingZeroes(long packedRegister, int q, int r) {
     long numLeadingZeroesQbits = packedRegister >>> r;
     if (numLeadingZeroesQbits == 0) {
 

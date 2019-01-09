@@ -1,8 +1,6 @@
 package com.liveramp.hyperminhash;
 
-import org.apache.commons.lang.NotImplementedException;
-
-public class HyperMinHash implements IntersectionSketch {
+public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
 
   private static final int HASH_SEED = 1738;
 
@@ -42,7 +40,7 @@ public class HyperMinHash implements IntersectionSketch {
   }
 
   @Override
-  public IntersectionSketch deepCopy() {
+  public HyperMinHash deepCopy() {
     return null;
   }
 }

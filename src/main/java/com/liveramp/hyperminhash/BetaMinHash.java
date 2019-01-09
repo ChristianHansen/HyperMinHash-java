@@ -1,8 +1,9 @@
 package com.liveramp.hyperminhash;
 
+import util.hash.MetroHash128;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import util.hash.MetroHash128;
 
 /**
  * Implementation of HyperMinHash described in Yu and Weber: https://arxiv.org/pdf/1710.08436.pdf.
@@ -28,7 +29,7 @@ import util.hash.MetroHash128;
  * If you'd like this class to support custom Q or R or P values, please open a github issue.
  * <p>
  */
-public class BetaMinHash implements IntersectionSketch {
+public class BetaMinHash implements IntersectionSketch<BetaMinHash> {
 
   // HLL Precision parameter
   public static final int P = 14;
