@@ -15,7 +15,10 @@ public interface IntersectionSketch extends Serializable {
   long cardinality();
 
   /**
-   * @param bytes serialized representation of the object to be added to this sketch
+   * @param bytes a representative key or serialized representation of the object to be added to
+   *              this sketch. If using a representative key instead of a complete serialized
+   *              representation, using at least 128 bits for the key where possible is recommended
+   *              to maximize accuracy.
    * @return false if the value returned by cardinality() is unaffected by the appearance of o in
    *     the stream.
    */

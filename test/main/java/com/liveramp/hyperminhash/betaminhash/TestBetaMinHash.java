@@ -1,5 +1,7 @@
 package com.liveramp.hyperminhash.betaminhash;
 
+import com.liveramp.hyperminhash.BetaMinHash;
+import com.liveramp.hyperminhash.BetaMinHashCombiner;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

@@ -1,14 +1,14 @@
-package com.liveramp.hyperminhash.bithelper;
+package com.liveramp.hyperminhash;
 
 import java.util.Arrays;
 
-public class BitHelper {
+class BitHelper {
 
   /**
    * @return the leftmost (most significant) {@code numBits} bits in {@code value} in int as the
    *     {@code numBits} least significant bits in that int.
    */
-  public static long getLeftmostBits(long value, int numBits) {
+  static long getLeftmostBits(long value, int numBits) {
     if (numBits >= Long.SIZE) {
       throw new IllegalArgumentException(String.format("numBits must be < %d", Integer.SIZE));
     }
@@ -16,7 +16,7 @@ public class BitHelper {
     return (value >>> (Long.SIZE - numBits));
   }
 
-  public static boolean[] longToBits(long num) {
+  static boolean[] longToBits(long num) {
     final boolean[] bits = new boolean[Long.SIZE];
 
     for (int i = 0; i < Long.SIZE; i++) {
@@ -34,7 +34,7 @@ public class BitHelper {
    *     returned for the hash value with bit string "100010..." would be 2.
    */
 
-  public static short getLeftmostOneBitPosition(byte[] hash, int p, int q) {
+  static short getLeftmostOneBitPosition(byte[] hash, int p, int q) {
     boolean[] bits = BitHelper.getBitsAsBooleans(hash);
     return getLeftmostOneBitPosition(bits, p, q);
   }
@@ -42,7 +42,7 @@ public class BitHelper {
   /**
    * @return The rightmost {@code r} bits from {@code hash}.
    */
-  public static long getRightmostBits(byte[] hash, int r) {
+  static long getRightmostBits(byte[] hash, int r) {
     final boolean[] bits = BitHelper.getBitsAsBooleans(hash);
     return BitHelper.bitsToLong(Arrays.copyOfRange(bits, bits.length - r, bits.length));
   }
@@ -50,7 +50,7 @@ public class BitHelper {
   /**
    * @return the long represented by {@code bits}, interpretted in little-endian order.
    */
-  public static long bitsToLong(boolean[] bits) {
+  static long bitsToLong(boolean[] bits) {
     if (bits.length > Long.SIZE) {
       throw new IllegalArgumentException(
           "num bits is greater than size of long. Num bits: " + bits.length);

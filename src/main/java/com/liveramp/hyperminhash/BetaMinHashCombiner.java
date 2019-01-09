@@ -1,6 +1,4 @@
-package com.liveramp.hyperminhash.betaminhash;
-
-import com.liveramp.hyperminhash.SketchCombiner;
+package com.liveramp.hyperminhash;
 
 public class BetaMinHashCombiner implements SketchCombiner<BetaMinHash> {
 

@@ -1,7 +1,5 @@
-package com.liveramp.hyperminhash.betaminhash;
+package com.liveramp.hyperminhash;
 
-import com.liveramp.hyperminhash.IntersectionSketch;
-import com.liveramp.hyperminhash.bithelper.BitHelper;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import util.hash.MetroHash128;
@@ -41,6 +39,8 @@ public class BetaMinHash implements IntersectionSketch {
   // Q + R must always be <= 16 since we're packing values into 16 bit registers
   public static final int Q = 6;
   public static final int R = 10;
+
+  private static final int HASH_SEED = 1337;
 
   final short[] registers;
 
@@ -98,7 +98,7 @@ public class BetaMinHash implements IntersectionSketch {
 
   @Override
   public boolean offer(byte[] val) {
-    MetroHash128 hash = new MetroHash128(1337).apply(ByteBuffer.wrap(val));
+    MetroHash128 hash = new MetroHash128(HASH_SEED).apply(ByteBuffer.wrap(val));
     ByteBuffer buf = ByteBuffer.allocate(16);
     hash.writeBigEndian(buf);
     return addHash(buf);

@@ -1,4 +1,4 @@
-package com.liveramp.hyperminhash.betaminhash;
+package com.liveramp.hyperminhash;
 
 import java.io.DataInput;
 import java.io.DataOutput;

@@ -1,7 +1,7 @@
 package com.liveramp.hyperminhash.demo;
 
-import com.liveramp.hyperminhash.betaminhash.BetaMinHash;
-import com.liveramp.hyperminhash.betaminhash.BetaMinHashCombiner;
+import com.liveramp.hyperminhash.BetaMinHash;
+import com.liveramp.hyperminhash.BetaMinHashCombiner;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
