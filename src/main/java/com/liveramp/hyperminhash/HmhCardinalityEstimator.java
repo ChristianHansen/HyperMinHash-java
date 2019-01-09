@@ -400,8 +400,8 @@ class HmhCardinalityEstimator {
 
   /**
    * @return a estimate of the cardinality of the elements represented by the HyperMinHash packed
-   *     registers by determining the number of leading zeroes of hash represented by each packed
-   *     register, and using HLL-based estimation from there.
+   * registers by determining the number of leading zeroes of hash represented by each packed
+   * register, and using HLL-based estimation from there.
    */
   long estimateCardinality(long[] packedRegisters, int numZeroSearchBits, int r) {
     final long basicEstimate = basicHllEstimate(packedRegisters, numZeroSearchBits, r);
@@ -415,7 +415,7 @@ class HmhCardinalityEstimator {
   private long basicHllEstimate(long[] packedRegisters, int q, int r) {
     double denominator = 0.0;
     for (long register : packedRegisters) {
-      denominator += Math.pow(2, -1 * (leadingZeroesInHash(register, q, r) + 1));
+      denominator += Math.pow(2, -1 * (LongPacker.unpackPositionOfFirstOne(register, q, r)));
     }
 
     final double numerator = alpha(packedRegisters.length)
@@ -428,9 +428,6 @@ class HmhCardinalityEstimator {
     //TODO
   }
 
-  private long debias(final long originalEstimate, final int p) {
-
-  }
 
   /**
    * @return the number of leading zeroes in the float represented by mantissa and negation of the
@@ -439,7 +436,7 @@ class HmhCardinalityEstimator {
    *     Weber) for added precision.
    */
   private static long leadingZeroesInHash(long packedRegister, int q, int r) {
-    final int exponent = LongPacker.unpackExponent(packedRegister, q, r);
+    final int exponent = LongPacker.unpackPositionOfFirstOne(packedRegister, q, r);
     final int maxExponentVal = (1 << q) + 1;
     if (exponent == maxExponentVal) {
       // This means that the "blue" bits in the paper (i.e. the q bits just after the bits used for
