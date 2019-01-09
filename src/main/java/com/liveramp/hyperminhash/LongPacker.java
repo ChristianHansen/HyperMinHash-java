@@ -1,10 +1,14 @@
 package com.liveramp.hyperminhash;
 
+/**
+ * Class used to pack a
+ */
 class LongPacker {
 
   static long pack(int numLeadingZeroes, long rBits, int r) {
     return (numLeadingZeroes << r) | rBits;
   }
+
 
   static long unpackMantissa(long register, int r) {
     // Just clear the exponent bits + any unused bits if 2^q + r < 64
