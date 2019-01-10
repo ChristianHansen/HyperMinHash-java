@@ -4,13 +4,20 @@ import java.util.Collection;
 
 public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
 
+  private static HyperMinHashCombiner instance = new HyperMinHashCombiner();
+
+  public static HyperMinHashCombiner getInstance() {
+    return instance;
+  }
+
+  private HyperMinHashCombiner() {
+  }
+
   @Override
   public HyperMinHash union(Collection<HyperMinHash> sketches) {
     assertInputNotEmpty(sketches);
     assertParamsAreEqual(sketches);
-    final HyperMinHash firstSketch = sketches.stream()
-        .findFirst()
-        .get();
+    final HyperMinHash firstSketch = sketches.stream().findFirst().get();
     if (sketches.size() == 1) {
       return firstSketch.deepCopy();
     }
@@ -136,9 +143,7 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
    * @param sketches input sketches
    */
   private void assertParamsAreEqual(Collection<HyperMinHash> sketches) {
-    final HyperMinHash firstSketch = sketches.stream()
-        .findFirst()
-        .get();
+    final HyperMinHash firstSketch = sketches.stream().findFirst().get();
 
     int p = firstSketch.p;
     int numZeroSearchBits = firstSketch.numZeroSearchBits;

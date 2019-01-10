@@ -1,10 +1,11 @@
 package com.liveramp.hyperminhash;
 
+import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
+
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 
 class HmhCardinalityEstimator implements Serializable {
 
@@ -910,19 +911,20 @@ class HmhCardinalityEstimator implements Serializable {
 
   /**
    * @return a estimate of the cardinality of the elements represented by the HyperMinHash packed
-   *     registers by determining the number of leading zeroes of hash represented by each packed
-   *     register, and using HLL-based estimation from there.
+   * registers by determining the number of leading zeroes of hash represented by each packed
+   * register, and using HLL-based estimation from there.
    */
-  static long estimateCardinality(long[] packedRegisters, int p, int r) {
-    if ((2 << p) != packedRegisters.length) {
+  static long estimateCardinality(long[] registers, int p, int r) {
+    if ((1 << p) != registers.length) {
       throw new IllegalStateException();
     }
 
-    final long basicEstimate = basicHllEstimate(packedRegisters, r);
+    final long basicEstimate = basicHllEstimate(registers, p, r);
+
     //TODO(christianhansen) a nice-to-have here could be using a different estimator for large
     // cardinalities, like the k-smallest element-based estimation from Yu and Weber.
     int numZeroRegisters = 0;
-    for (long register : packedRegisters) {
+    for (long register : registers) {
       // Registers with value zero must represent an empty bucket
       if (register == 0) {
         numZeroRegisters++;
@@ -931,15 +933,15 @@ class HmhCardinalityEstimator implements Serializable {
 
     if (numZeroRegisters != 0) {
       final long linearCountingEstimate = Math.round(
-          linearCountingEstimate(packedRegisters.length, numZeroRegisters)
+          linearCountingEstimate(registers.length, numZeroRegisters)
       );
 
       if (useLinearCounting(p, linearCountingEstimate)) {
         return linearCountingEstimate;
       }
-
-      // Proceed to calculate bias-corrected HLL estimate if we aren't using linear counting.
     }
+
+    // Proceed to calculate bias-corrected HLL estimate if we aren't using linear counting.
 
     final double[] estimatesForPrecision = rawEstimateData[p - MIN_P];
     final double[] biasesForPrecision = biasData[p - MIN_P];
@@ -965,15 +967,13 @@ class HmhCardinalityEstimator implements Serializable {
     }
   }
 
-  private static long basicHllEstimate(long[] packedRegisters, int r) {
+  private static long basicHllEstimate(long[] registers, int p, int r) {
     double denominator = 0.0;
-    for (long register : packedRegisters) {
+    for (long register : registers) {
       denominator += Math.pow(2, -1 * LongPacker.unpackPositionOfFirstOne(register, r));
     }
 
-    final double numerator = alpha(packedRegisters.length)
-        * packedRegisters.length
-        * packedRegisters.length;
+    final double numerator = alpha(p) * registers.length * registers.length;
     return Math.round(numerator / denominator);
   }
 
@@ -986,7 +986,7 @@ class HmhCardinalityEstimator implements Serializable {
   }
 
   // Take estimation bias into account using linear interpolation between the closest bias-corrected
-  // estimates from the Yu and Weber paper.
+  // estimates from the HLL++ paper.
   // Visible for testing.
   static double biasCorrectEstimate(
       final long estimate,
@@ -1005,11 +1005,14 @@ class HmhCardinalityEstimator implements Serializable {
     final int smallestDiffIndex = indexesByDifference.get(minDiff);
     final int secondSmallestDiffIndex = indexesByDifference.get(secondSmallestDiff);
 
+    int firstIndex = Math.min(smallestDiffIndex, secondSmallestDiffIndex);
+    int secondIndex = Math.max(smallestDiffIndex, secondSmallestDiffIndex);
+
     return new LinearInterpolator().interpolate(
-        new double[]{rawEstimates[smallestDiffIndex], rawEstimates[secondSmallestDiffIndex]},
+        new double[]{rawEstimates[firstIndex], rawEstimates[secondIndex]},
         new double[]{
-            rawEstimates[smallestDiffIndex] - biases[smallestDiffIndex],
-            rawEstimates[secondSmallestDiffIndex] - biases[secondSmallestDiffIndex]
+            rawEstimates[firstIndex] - biases[secondIndex],
+            rawEstimates[firstIndex] - biases[secondIndex]
         })
         .value(estimate);
   }

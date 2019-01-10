@@ -6,7 +6,7 @@ package com.liveramp.hyperminhash;
 class LongPacker {
 
   static long pack(int positionOfFirstOne, long mantissa, int r) {
-    if (positionOfFirstOne > Math.pow(2, 6) - 1) {
+    if (positionOfFirstOne > (1L << 6) - 1) {
       throw new IllegalArgumentException("position of first one must fit into 6 bits");
     }
 
