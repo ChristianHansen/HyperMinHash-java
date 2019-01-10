@@ -73,7 +73,7 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
   public boolean offer(byte[] bytes) {
 //    MetroHash128 hash = MetroHash.hash128(HASH_SEED, bytes);
     final long[] hash = Murmur3.hash128(bytes);
-//    i++;
+
     // the left half of the hash is used for HLL
     final long hllHash = hash[0];
 
