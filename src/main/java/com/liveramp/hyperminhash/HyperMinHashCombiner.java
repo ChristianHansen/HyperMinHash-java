@@ -14,13 +14,13 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
 
     final int numRegisters = sketches[0].registers.length;
     final HyperMinHash mergedSketch = sketches[0].deepCopy();
-    int q = mergedSketch.q;
+    int q = mergedSketch.numZeroSearchBits;
     int r = mergedSketch.r;
 
     for (int i = 0; i < numRegisters; i++) {
       for (HyperMinHash sketch : sketches) {
 
-        if (HyperMinHash.shouldReplace(mergedSketch.registers[i], sketch.registers[i], q, r)) {
+        if (HyperMinHash.shouldReplace(mergedSketch.registers[i], sketch.registers[i], r)) {
           mergedSketch.registers[i] = sketch.registers[i];
         }
       }
@@ -82,7 +82,7 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
     }
 
     int p = sketches[0].p;
-    int q = sketches[0].q;
+    int q = sketches[0].numZeroSearchBits;
     int r = sketches[0].r;
     double numExpectedCollisions = expectedCollision(p, q, r, cardinalities);
 
@@ -132,11 +132,11 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
    */
   private void assertParamsAreEqual(HyperMinHash... sketches) {
     int p = sketches[0].p;
-    int q = sketches[0].q;
+    int q = sketches[0].numZeroSearchBits;
     int r = sketches[0].r;
 
     for (HyperMinHash sketch : sketches) {
-      if (p != sketch.p || q != sketch.q || r != sketch.r) {
+      if (p != sketch.p || q != sketch.numZeroSearchBits || r != sketch.r) {
         throw new IllegalArgumentException("Input sketches have different parameters.");
       }
     }

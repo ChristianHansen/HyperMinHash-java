@@ -8,7 +8,11 @@ import java.util.Arrays;
 
 public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
 
+  // This seed should not be changed
   private static final int HASH_SEED = 1738;
+
+  // used in serialization
+  static final byte VERSION = 1;
 
   /* There are 2^p registers. Per the HyperMinHash algorithm, hashes are bucketed based on the value
    * of their bitstring's first p bits. The r least significant bits in the bitstring in are stored
@@ -42,7 +46,8 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
 
     // Ensure that we can pack the number of leading zeroes and the least significant r bits from
     // the hash bitstring into a long "register."
-    Preconditions.checkArgument(r < 58);
+    Preconditions.checkArgument(r < 58 && r > 1);
+
     this.p = p;
     this.numZeroSearchBits = Long.SIZE - p;
     this.r = r;
@@ -57,7 +62,8 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
 
   @Override
   public long cardinality() {
-    return cardinalityEstimator.estimateCardinality(registers, numZeroSearchBits, r);
+    return 42;
+//    return HmhCardinalityEstimator.estimateCardinality(registers, numZeroSearchBits, r);
   }
 
   @Override
@@ -74,11 +80,12 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
     // We add a one to the right of the zero search space just in case the entire space is zeros
     long zeroSearchSpace = (leftHalf << p) | (1 << p - 1);
     int leftmostOnePosition = Long.numberOfLeadingZeros(zeroSearchSpace) + 1;
+
     // We take the leftmost R bits as the minHash bits
     long minHashBits = rightHalf >>> (Long.SIZE - r);
 
     long incomingRegister = LongPacker.pack(leftmostOnePosition, minHashBits, r);
-    if (shouldReplace(registers[registerIndex], incomingRegister, numZeroSearchBits, r)) {
+    if (shouldReplace(registers[registerIndex], incomingRegister, r)) {
       registers[registerIndex] = incomingRegister;
       return true;
     }
@@ -93,9 +100,9 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
 
   // we could replace this with a single comparison of the registers but it'd be less clear
   // it could be swapped if it meaningfully affects performance
-  static boolean shouldReplace(long currentRegister, long incomingRegister, int q, int r) {
-    int currentLeadingOnePosition = LongPacker.unpackPositionOfFirstOne(currentRegister, q, r);
-    int incomingLeadingOnePosition = LongPacker.unpackPositionOfFirstOne(incomingRegister, q, r);
+  static boolean shouldReplace(long currentRegister, long incomingRegister, int r) {
+    int currentLeadingOnePosition = LongPacker.unpackPositionOfFirstOne(currentRegister, r);
+    int incomingLeadingOnePosition = LongPacker.unpackPositionOfFirstOne(incomingRegister, r);
 
     if (currentLeadingOnePosition < incomingLeadingOnePosition) {
       return true;
@@ -109,5 +116,37 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
     }
 
     return false;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    HyperMinHash that = (HyperMinHash) o;
+
+    if (p != that.p) {
+      return false;
+    }
+    if (numZeroSearchBits != that.numZeroSearchBits) {
+      return false;
+    }
+    if (r != that.r) {
+      return false;
+    }
+    return Arrays.equals(registers, that.registers);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = Arrays.hashCode(registers);
+    result = 31 * result + p;
+    result = 31 * result + numZeroSearchBits;
+    result = 31 * result + r;
+    return result;
   }
 }

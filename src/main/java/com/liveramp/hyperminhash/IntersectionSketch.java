@@ -54,7 +54,7 @@ public interface IntersectionSketch<T extends IntersectionSketch<T>> {
      * @param sketch the sketch whose size in bytes we want
      * @return size in bytes
      */
-    long sizeInBytes(T sketch);
+    int sizeInBytes(T sketch);
   }
 }
 
