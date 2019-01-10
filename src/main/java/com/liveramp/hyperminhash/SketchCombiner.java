@@ -9,7 +9,7 @@ import java.io.Serializable;
  * same package as the corresponding {@link IntersectionSketch} to facilitate encapsulation of
  * sketch internals that the combiner may need access to.
  */
-public interface SketchCombiner<T extends IntersectionSketch> extends Serializable {
+public interface SketchCombiner<T extends IntersectionSketch<T>> extends Serializable {
 
   /**
    * Return a sketch representing the union of the sets represented by the sketches in {@code

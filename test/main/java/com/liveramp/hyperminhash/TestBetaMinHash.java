@@ -1,16 +1,14 @@
-package com.liveramp.hyperminhash.betaminhash;
-
-import com.liveramp.hyperminhash.BetaMinHash;
-import com.liveramp.hyperminhash.BetaMinHashCombiner;
-import org.apache.commons.codec.binary.Hex;
-import org.junit.Test;
-
-import java.util.*;
+package com.liveramp.hyperminhash;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestBetaMinHash {
+
+import com.liveramp.hyperminhash.test.AbstractMinHashTest;
+import java.util.Random;
+import org.junit.Test;
+
+public class TestBetaMinHash extends AbstractMinHashTest {
 
   @Test
   public void testZeroCardinality() {
@@ -21,22 +19,14 @@ public class TestBetaMinHash {
   @Test
   public void testCardinality() {
     final BetaMinHash sk = new BetaMinHash();
-    int step = 10_000;
-    final Map<String, Boolean> unique = new HashMap<>();
-    for (int i = 1; unique.size() < 1_000_000; i++) {
-      String str = randomStringWithLength(randPositiveInt() % 32);
-      sk.offer(str.getBytes());
-      unique.put(str, true);
+    super.testCardinality(
+        sk,
+        10_000_000,
+        10_000,
+        new Random(),
+        2.0
+    );
 
-      if (unique.size() % step == 0) {
-        long exact = unique.size();
-        long res = sk.cardinality();
-        step *= 10;
-
-        double pctError = 100 * getError(res, exact);
-        assertTrue(pctError <= 2);
-      }
-    }
   }
 
   @Test
@@ -44,30 +34,16 @@ public class TestBetaMinHash {
     final BetaMinHash sk1 = new BetaMinHash();
     final BetaMinHash sk2 = new BetaMinHash();
     final BetaMinHashCombiner combiner = BetaMinHashCombiner.getInstance();
-    final Set<String> unique = new HashSet<>(3_500_000);
-
-    for (int i = 1; i <= 1_500_000; i++) {
-      String str = randomStringWithLength(randPositiveInt() % 32);
-      sk1.offer(str.getBytes());
-      unique.add(str);
-
-      str = randomStringWithLength(randPositiveInt() % 32);
-      sk2.offer(str.getBytes());
-      unique.add(str);
-    }
-
-    final BetaMinHash msk = combiner.union(sk1, sk2);
-    final long exact = unique.size();
-    final long res = msk.cardinality();
-
-    final double pctError = 100 * getError(res, exact);
-    assertTrue(pctError <= 2);
+    final int elementsPerSketch = 1_500_000;
+    final double pctError = 2.0;
+    super.testUnion(sk1, sk2, combiner, elementsPerSketch, pctError, new Random());
   }
 
   @Test
   public void testIntersectionCardinality() {
     final int iters = 20;
     final int k = 1_000_000;
+    final double pctError = 5.0;
     final BetaMinHashCombiner combiner = BetaMinHashCombiner.getInstance();
 
     for (int j = 1; j < iters; j++) {
@@ -189,35 +165,5 @@ public class TestBetaMinHash {
     }
   }
 
-  /**
-   * Helper Methods
-   **/
-  private static final String LETTER_BYTES = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-  private String randomStringWithLength(int n) {
-    byte[] b = new byte[n];
-    for (int i = 0; i < n; i++) {
-      b[i] = (byte) LETTER_BYTES.charAt(randPositiveInt() % LETTER_BYTES.length());
-    }
-    return Hex.encodeHexString(b);
-  }
-
-  private double getError(long result, long expected) {
-    if (result == expected) {
-      return 0;
-    }
-
-    if (expected == 0) {
-      return result;
-    }
-
-    long delta = Math.abs(result - expected);
-    return delta / (double) expected;
-  }
-
-  private Random rng = new Random();
-
-  int randPositiveInt() {
-    return Math.abs(rng.nextInt());
-  }
 }
