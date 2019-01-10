@@ -24,9 +24,6 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
   final int numZeroSearchBits;
   final int r;
 
-
-  private final HmhCardinalityEstimator cardinalityEstimator;
-
   /**
    * @param p HLL precision parameter
    * @param r Number of MinHash bits to keep
@@ -56,7 +53,6 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
     this.p = p;
     this.numZeroSearchBits = Long.SIZE - p;
     this.r = r;
-    this.cardinalityEstimator = new HmhCardinalityEstimator();
     if (registers == null) {
       this.registers = new long[1 << p];
     } else {

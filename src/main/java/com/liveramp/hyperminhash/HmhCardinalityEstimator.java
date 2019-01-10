@@ -1,11 +1,10 @@
 package com.liveramp.hyperminhash;
 
-import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
-
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 
 class HmhCardinalityEstimator implements Serializable {
 
@@ -911,8 +910,8 @@ class HmhCardinalityEstimator implements Serializable {
 
   /**
    * @return a estimate of the cardinality of the elements represented by the HyperMinHash packed
-   * registers by determining the number of leading zeroes of hash represented by each packed
-   * register, and using HLL-based estimation from there.
+   *     registers by determining the number of leading zeroes of hash represented by each packed
+   *     register, and using HLL-based estimation from there.
    */
   static long estimateCardinality(long[] registers, int p, int r) {
     if ((1 << p) != registers.length) {
@@ -1010,14 +1009,21 @@ class HmhCardinalityEstimator implements Serializable {
     final int smallestDiffIndex = indexesByDifference.get(minDiff);
     final int secondSmallestDiffIndex = indexesByDifference.get(secondSmallestDiff);
 
-    int firstIndex = Math.min(smallestDiffIndex, secondSmallestDiffIndex);
-    int secondIndex = Math.max(smallestDiffIndex, secondSmallestDiffIndex);
+    final int firstIndex;
+    final int secondIndex;
+    if (rawEstimates[smallestDiffIndex] < rawEstimates[secondSmallestDiffIndex]) {
+      firstIndex = smallestDiffIndex;
+      secondIndex = secondSmallestDiffIndex;
+    } else {
+      secondIndex = smallestDiffIndex;
+      firstIndex = secondSmallestDiffIndex;
+    }
 
     return new LinearInterpolator().interpolate(
         new double[]{rawEstimates[firstIndex], rawEstimates[secondIndex]},
         new double[]{
-            rawEstimates[firstIndex] - biases[secondIndex],
-            rawEstimates[firstIndex] - biases[secondIndex]
+            rawEstimates[firstIndex] - biases[firstIndex],
+            rawEstimates[secondIndex] - biases[secondIndex]
         })
         .value(estimate);
   }
