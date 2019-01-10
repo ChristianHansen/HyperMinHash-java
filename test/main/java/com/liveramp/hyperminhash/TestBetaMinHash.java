@@ -15,14 +15,13 @@ public class TestBetaMinHash {
 
   @Test
   public void testCardinality() {
-    final BetaMinHash sk = new BetaMinHash();
     final int maxUniqueElements = 10_000_000;
     final int minTestCardinality = 10_000;
     final double pctErr = 2.0;
     RandomTestRunner.runRandomizedTest(
         3,
         (random) -> MinHashTestSuite.testCardinality(
-            sk,
+            new BetaMinHash(),
             maxUniqueElements,
             minTestCardinality,
             random,
@@ -32,15 +31,19 @@ public class TestBetaMinHash {
 
   @Test
   public void testUnion() {
-    final BetaMinHash sk1 = new BetaMinHash();
-    final BetaMinHash sk2 = new BetaMinHash();
     final BetaMinHashCombiner combiner = BetaMinHashCombiner.getInstance();
     final int elementsPerSketch = 1_500_000;
     final double pctErr = 2.0;
     RandomTestRunner.runRandomizedTest(
         3,
-        (random) -> MinHashTestSuite
-            .testUnion(sk1, sk2, combiner, elementsPerSketch, pctErr, random)
+        (random) -> MinHashTestSuite.testUnion(
+            new BetaMinHash(),
+            new BetaMinHash(),
+            combiner,
+            elementsPerSketch,
+            pctErr,
+            random
+        )
     );
   }
 
@@ -75,15 +78,14 @@ public class TestBetaMinHash {
 
   @Test
   public void testMultiwayIntersection() {
-
     final int initialIntersectionSize = 3000;
     final int initialSketchSize = 10_000;
     final int numIter = 5;
     MinHashTestSuite.testMultiwayIntersection(
         new BetaMinHash(),
         BetaMinHashCombiner.getInstance(),
-        initialIntersectionSize,
         initialSketchSize,
+        initialIntersectionSize,
         numIter
     );
 

@@ -172,7 +172,7 @@ class MinHashTestSuite {
 
       buildIntersectingSketches(sketchSize, intersectionSize, sk1, sk2, sk3, sk4);
 
-      long expectedIntersection = initialIntersectionSize;
+      long expectedIntersection = intersectionSize;
       long actualIntersection = combiner.intersectionCardinality(Arrays.asList(sk1, sk2, sk3));
       double pctError = 100 * getError(actualIntersection, expectedIntersection);
       Assert.assertTrue(
