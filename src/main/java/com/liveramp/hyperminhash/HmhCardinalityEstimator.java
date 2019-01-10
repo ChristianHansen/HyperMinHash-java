@@ -905,6 +905,9 @@ class HmhCardinalityEstimator implements Serializable {
           -704.050000000047, -850.486000000034, -757.43200000003, -713.308999999892,}
   };
 
+  private static final double[] hllEstimateTreshold = {10, 20, 40, 80, 220, 400, 900, 1800, 3100,
+      6500, 11500, 20000, 50000, 120000, 350000};
+
   /**
    * @return a estimate of the cardinality of the elements represented by the HyperMinHash packed
    *     registers by determining the number of leading zeroes of hash represented by each packed
@@ -918,21 +921,47 @@ class HmhCardinalityEstimator implements Serializable {
     final long basicEstimate = basicHllEstimate(packedRegisters, r);
     //TODO(christianhansen) a nice-to-have here could be using a different estimator for large
     // cardinalities, like the k-smallest element-based estimation from Yu and Weber.
-    if (basicEstimate < ((5 * packedRegisters.length) / 2)) {
-      return Math.round(linearCountingEstimate(packedRegisters));
-    } else {
-      final double[] estimatesForPrecision = rawEstimateData[p - MIN_P];
-      final double[] biasesForPrecision = biasData[p - MIN_P];
-      if (basicEstimate > estimatesForPrecision[estimatesForPrecision.length - 1]
-          || p >= MIN_P + estimatesForPrecision.length) {
-        // We don't correct for bias when either the precision or estimate is too high for the bias
-        // correction data.
-        return basicEstimate;
+    int numZeroRegisters = 0;
+    for (long register : packedRegisters) {
+      // Registers with value zero must represent an empty bucket
+      if (register == 0) {
+        numZeroRegisters++;
+      }
+    }
+
+    if (numZeroRegisters != 0) {
+      final long linearCountingEstimate = Math.round(
+          linearCountingEstimate(packedRegisters.length, numZeroRegisters)
+      );
+
+      if (useLinearCounting(p, linearCountingEstimate)) {
+        return linearCountingEstimate;
       }
 
-      return Math.round(
-          biasCorrectEstimate(basicEstimate, estimatesForPrecision, biasesForPrecision)
-      );
+      // Proceed to calculate bias-corrected HLL estimate if we aren't using linear counting.
+    }
+
+    final double[] estimatesForPrecision = rawEstimateData[p - MIN_P];
+    final double[] biasesForPrecision = biasData[p - MIN_P];
+    if (basicEstimate > estimatesForPrecision[estimatesForPrecision.length - 1]
+        || p >= MIN_P + estimatesForPrecision.length) {
+      // We don't correct for bias when either the precision or estimate is too high for the bias
+      // correction data.
+      return basicEstimate;
+    }
+
+    return Math.round(
+        biasCorrectEstimate(basicEstimate, estimatesForPrecision, biasesForPrecision)
+    );
+
+  }
+
+  private static boolean useLinearCounting(final int p, final long linearCountEstimate) {
+    final int m = (1 << p);
+    if (p < MIN_P + hllEstimateTreshold.length) {
+      return linearCountEstimate < hllEstimateTreshold[p - MIN_P];
+    } else {
+      return linearCountEstimate <= 5 * m;
     }
   }
 
@@ -948,23 +977,16 @@ class HmhCardinalityEstimator implements Serializable {
     return Math.round(numerator / denominator);
   }
 
-  // Visible for testing.
-  static double linearCountingEstimate(long[] packedRegisters) {
-    int numZeroRegisters = 0;
-    for (long register : packedRegisters) {
-      // Registers with value zero must represent an empty bucket
-      if (register == 0) {
-        numZeroRegisters++;
-      }
+  private static double linearCountingEstimate(int m, int numZeroRegisters) {
+    if (numZeroRegisters == 0) {
+      return 0;
     }
-    return packedRegisters.length * Math.log(
-        ((double) packedRegisters.length) / numZeroRegisters
-    );
 
+    return m * Math.log(((double) m) / numZeroRegisters);
   }
 
-  // Take estimation bias into account using linear interpolation between the calculated biases
-  // for raw estimates.
+  // Take estimation bias into account using linear interpolation between the closest bias-corrected
+  // estimates from the Yu and Weber paper.
   // Visible for testing.
   static double biasCorrectEstimate(
       final long estimate,
