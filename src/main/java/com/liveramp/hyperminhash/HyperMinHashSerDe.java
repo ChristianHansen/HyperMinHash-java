@@ -33,7 +33,7 @@ public class HyperMinHashSerDe implements IntersectionSketch.SerDe<HyperMinHash>
     int numRegisters = inputBuffer.getInt();
     long[] registers = new long[numRegisters];
     for (int i = 0; i < numRegisters; i++) {
-      registers[i] = inputBuffer.getInt();
+      registers[i] = inputBuffer.getLong();
     }
     return HyperMinHash.wrapRegisters(p, r, registers);
   }
