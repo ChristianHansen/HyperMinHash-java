@@ -1,6 +1,7 @@
 package com.liveramp.hyperminhash;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 /**
  * {@code SketchCombiner} instances support aggregate operations over corresponding {@link}
@@ -16,19 +17,19 @@ public interface SketchCombiner<T extends IntersectionSketch<T>> extends Seriali
    * sketches}. Sketches passed will not be mutated. If only a single sketch is passed, this method
    * will return a deep copy.
    */
-  T union(T... sketches);
+  T union(Collection<T> sketches);
 
   /**
    * Return an estimate of the cardinality of the intersection of the elements in the sets
    * represented by {@code sketches}.
    */
-  long intersectionCardinality(T... sketches);
+  long intersectionCardinality(Collection<T> sketches);
 
   /**
    * Return an estimate of the Jaccard index of the sets represented by {@code sketches}. The
    * Jaccard index is the ratio of the cardinality of the intersection of sets divided by the
    * cardinality of the union of those sets.
    */
-  double similarity(T... sketches);
+  double similarity(Collection<T> sketches);
 
 }

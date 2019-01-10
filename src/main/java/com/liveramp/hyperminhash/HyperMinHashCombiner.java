@@ -1,19 +1,22 @@
 package com.liveramp.hyperminhash;
 
+import java.util.Collection;
 
 public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
 
   @Override
-  public HyperMinHash union(HyperMinHash... sketches) {
-    assertInputArrayNotEmpty(sketches);
+  public HyperMinHash union(Collection<HyperMinHash> sketches) {
+    assertInputNotEmpty(sketches);
     assertParamsAreEqual(sketches);
-
-    if (sketches.length == 1) {
-      return sketches[0].deepCopy();
+    final HyperMinHash firstSketch = sketches.stream()
+        .findFirst()
+        .get();
+    if (sketches.size() == 1) {
+      return firstSketch.deepCopy();
     }
 
-    final int numRegisters = sketches[0].registers.length;
-    final HyperMinHash mergedSketch = sketches[0].deepCopy();
+    final int numRegisters = firstSketch.registers.length;
+    final HyperMinHash mergedSketch = firstSketch.deepCopy();
     int r = mergedSketch.r;
 
     for (int i = 0; i < numRegisters; i++) {
@@ -29,32 +32,35 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
   }
 
   @Override
-  public long intersectionCardinality(HyperMinHash... sketches) {
+  public long intersectionCardinality(Collection<HyperMinHash> sketches) {
     return (long) (union(sketches).cardinality() * similarity(sketches));
   }
 
   @Override
-  public double similarity(HyperMinHash... sketches) {
+  public double similarity(Collection<HyperMinHash> sketches) {
     // TODO we can maybe make an abstract class that exposes a similarityInternal(registers, p,q,r)
     // TODO which is shared between combiners
     // Algorithm 2.1.4 in HyperMinHash paper
-    assertInputArrayNotEmpty(sketches);
+    assertInputNotEmpty(sketches);
     assertParamsAreEqual(sketches);
 
-    if (sketches.length == 1) {
+    if (sketches.size() == 1) {
       return 1.0;
     }
 
     long c = 0;
     long n = 0;
-    long numRegisters = sketches[0].registers.length;
+    final HyperMinHash firstSketch = sketches.stream()
+        .findFirst()
+        .get();
+    long numRegisters = firstSketch.registers.length;
 
     for (int i = 0; i < numRegisters; i++) {
-      if (sketches[0].registers[i] != 0) {
+      if (firstSketch.registers[i] != 0) {
         boolean itemInIntersection = true;
         for (HyperMinHash sketch : sketches) {
           itemInIntersection =
-              itemInIntersection && sketches[0].registers[i] == sketch.registers[i];
+              itemInIntersection && firstSketch.registers[i] == sketch.registers[i];
         }
 
         if (itemInIntersection) {
@@ -74,15 +80,15 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
       return 0;
     }
 
-    double[] cardinalities = new double[sketches.length];
+    double[] cardinalities = new double[sketches.size()];
     int i = 0;
     for (HyperMinHash sk : sketches) {
       cardinalities[i++] = sk.cardinality();
     }
 
-    int p = sketches[0].p;
-    int numZeroSearchBits = sketches[0].numZeroSearchBits;
-    int r = sketches[0].r;
+    int p = firstSketch.p;
+    int numZeroSearchBits = firstSketch.numZeroSearchBits;
+    int r = firstSketch.r;
     double numExpectedCollisions = expectedCollision(p, numZeroSearchBits, r, cardinalities);
 
     if (c < numExpectedCollisions) {
@@ -129,10 +135,14 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
    *
    * @param sketches input sketches
    */
-  private void assertParamsAreEqual(HyperMinHash... sketches) {
-    int p = sketches[0].p;
-    int numZeroSearchBits = sketches[0].numZeroSearchBits;
-    int r = sketches[0].r;
+  private void assertParamsAreEqual(Collection<HyperMinHash> sketches) {
+    final HyperMinHash firstSketch = sketches.stream()
+        .findFirst()
+        .get();
+
+    int p = firstSketch.p;
+    int numZeroSearchBits = firstSketch.numZeroSearchBits;
+    int r = firstSketch.r;
 
     for (HyperMinHash sketch : sketches) {
       if (p != sketch.p || numZeroSearchBits != sketch.numZeroSearchBits || r != sketch.r) {
@@ -141,8 +151,8 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
     }
   }
 
-  private void assertInputArrayNotEmpty(HyperMinHash... sketches) {
-    if (sketches.length == 0) {
+  private void assertInputNotEmpty(Collection<HyperMinHash> sketches) {
+    if (sketches.size() == 0) {
       throw new IllegalArgumentException("Input sketches cannot be empty.");
     }
   }

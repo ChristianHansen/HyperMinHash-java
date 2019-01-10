@@ -25,7 +25,9 @@ public class BetaMinHashWritable implements Writable {
   public BetaMinHashWritable combine(BetaMinHashWritable other) {
     BetaMinHash mergedSketch = BetaMinHashCombiner
         .getInstance()
-        .union(BetaMinHash.wrapRegisters(registers), other.getSketch());
+        .union(
+            Arrays.asList(BetaMinHash.wrapRegisters(registers), other.getSketch())
+        );
     return new BetaMinHashWritable(mergedSketch);
   }
 

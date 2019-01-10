@@ -1,5 +1,7 @@
 package com.liveramp.hyperminhash;
 
+import com.google.common.collect.Lists;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -44,7 +46,9 @@ class MinHashTestSuite {
         assertionCheckpoint *= 10;
 
         double pctError = 100 * getError(res, exact);
-        Assert.assertTrue(pctError <= maxPctErr);
+        Assert.assertTrue(
+            String.format("Got %f%% error, but expected at most %f%%", pctError, maxPctErr),
+            pctError <= maxPctErr);
       }
     }
 
@@ -69,12 +73,15 @@ class MinHashTestSuite {
       unique.add(str);
     }
 
-    final Sketch msk = combiner.union(sk1, sk2);
+    final Sketch msk = combiner.union(Arrays.asList(sk1, sk2));
     final long exact = unique.size();
     final long res = msk.cardinality();
 
     final double pctError = 100 * getError(res, exact);
-    Assert.assertTrue(pctError <= maxPctError);
+    Assert.assertTrue(
+        String.format("Got %f%% error, but expected at most %f%%", pctError, maxPctError),
+        pctError <= maxPctError
+    );
   }
 
   static <Sketch extends IntersectionSketch<Sketch>> void testIntersection(
@@ -101,7 +108,7 @@ class MinHashTestSuite {
       }
 
       final long expected = (long) (elementsInLeftSketches - elementsInLeftSketches * frac);
-      final long result = combiner.intersectionCardinality(sk1, sk2);
+      final long result = combiner.intersectionCardinality(Lists.newArrayList(sk1, sk2));
 
       final double pctError = 100 * getError(result, expected);
       Assert.assertTrue(
@@ -132,7 +139,9 @@ class MinHashTestSuite {
 
     final double expectedJaccardIndex = smallSetSize / (double) bigSetSize;
     final long expectedIntersection = (long) (expectedJaccardIndex * bigSetSize);
-    final long actualIntersection = combiner.intersectionCardinality(smallSketch, bigSketch);
+    final long actualIntersection = combiner.intersectionCardinality(
+        Arrays.asList(smallSketch, bigSketch)
+    );
     final double pctError = 100 * getError(actualIntersection, expectedIntersection);
 
     // HyperMinHash performance starts decreasing as jaccard index becomes < 1%. On a Jaccard index this small
@@ -164,7 +173,7 @@ class MinHashTestSuite {
       buildIntersectingSketches(sketchSize, intersectionSize, sk1, sk2, sk3, sk4);
 
       long expectedIntersection = initialIntersectionSize;
-      long actualIntersection = combiner.intersectionCardinality(sk1, sk2, sk3);
+      long actualIntersection = combiner.intersectionCardinality(Arrays.asList(sk1, sk2, sk3));
       double pctError = 100 * getError(actualIntersection, expectedIntersection);
       Assert.assertTrue(
           String.format("Expected pctError to be <2, found %f. Expected: %d, Actual: %d", pctError,
@@ -205,7 +214,6 @@ class MinHashTestSuite {
     }
     return Hex.encodeHexString(b);
   }
-
 
   private static int randPositiveInt(final Random random) {
     return Math.abs(random.nextInt());
