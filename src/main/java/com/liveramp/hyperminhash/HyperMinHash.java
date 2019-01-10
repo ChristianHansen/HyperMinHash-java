@@ -46,11 +46,11 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
   private HyperMinHash(int p, int r, long[] registers) {
     // Ensure that the number of registers isn't larger than the largest array java can hold in memory
     // biggest java array can be of size Integer.MAX_VALUE
-    Preconditions.checkArgument(p < 31);
+    Preconditions.checkArgument(p > 1 && p < 31);
 
     // Ensure that we can pack the number of leading zeroes and the least significant r bits from
     // the hash bitstring into a long "register."
-    Preconditions.checkArgument(r < 58 && r > 1);
+    Preconditions.checkArgument(r > 1 && r < 58);
 
     this.p = p;
     this.numZeroSearchBits = Long.SIZE - p;
@@ -150,5 +150,15 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
     result = 31 * result + numZeroSearchBits;
     result = 31 * result + r;
     return result;
+  }
+
+  @Override
+  public String toString() {
+    return "HyperMinHash{" +
+        "registers=" + Arrays.toString(registers) +
+        ", p=" + p +
+        ", numZeroSearchBits=" + numZeroSearchBits +
+        ", r=" + r +
+        '}';
   }
 }

@@ -10,33 +10,53 @@ public class TestHyperMinHashSerDe {
   @Test
   public void testRoundtripEmptySketch() {
     HyperMinHashSerDe serde = new HyperMinHashSerDe();
-    HyperMinHash hyperMinHash = new HyperMinHash(10, 10);
-    Assert.assertEquals(hyperMinHash, serde.fromBytes(serde.toBytes(hyperMinHash)));
+    int iterations = 1_000;
+
+    RandomTestRunner.runRandomizedTest(iterations, rng -> {
+      int p = Math.max(rng.nextInt(21), 2);
+      int r = Math.max(rng.nextInt(57), 2);
+      HyperMinHash hyperMinHash = new HyperMinHash(p, r);
+      Assert.assertEquals(hyperMinHash, serde.fromBytes(serde.toBytes(hyperMinHash)));
+    });
   }
 
   @Test
   public void testRoundtripFilledSketch() {
     HyperMinHashSerDe serde = new HyperMinHashSerDe();
-    int iterations = 10_000;
-    for (int i = 0; i < iterations; i++) {
-      HyperMinHash hmh = new HyperMinHash(14, 30);
+    int iterations = 5_000;
+    RandomTestRunner.runRandomizedTest(iterations, rng -> {
+      int p = Math.max(rng.nextInt(21), 2);
+      int r = Math.max(rng.nextInt(57), 2);
+      HyperMinHash hmh = new HyperMinHash(p, r);
+
       int numElements = 1000;
       for (int j = 0; j < numElements; j++) {
-        hmh.offer(randomByteArrayOfLength(50));
+        hmh.offer(randomByteArrayOfLength(rng, 50));
       }
 
       Assert.assertEquals(hmh, serde.fromBytes(serde.toBytes(hmh)));
-    }
+    });
   }
 
   @Test
   public void testSizeInBytes() {
+    // not super valuable right now since we store a fixed size sketch, but futureproofing
+    HyperMinHashSerDe serde = new HyperMinHashSerDe();
+    RandomTestRunner.runRandomizedTest(1_000, rng -> {
+      int p = Math.max(rng.nextInt(21), 2);
+      int r = Math.max(rng.nextInt(57), 2);
+      HyperMinHash hmh = new HyperMinHash(p, r);
+      int numElements = 1000;
+      for (int j = 0; j < numElements; j++) {
+        hmh.offer(randomByteArrayOfLength(rng, 50));
+      }
+
+      Assert.assertEquals(serde.sizeInBytes(hmh), serde.toBytes(hmh).length);
+    });
 
   }
 
-  Random rng = new Random();
-
-  private byte[] randomByteArrayOfLength(int n) {
+  private byte[] randomByteArrayOfLength(Random rng, int n) {
     byte[] bytes = new byte[n];
     rng.nextBytes(bytes);
     return bytes;
