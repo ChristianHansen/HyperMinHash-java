@@ -1033,4 +1033,5 @@ class HmhCardinalityEstimator implements Serializable {
         throw new IllegalArgumentException("Values of p under 4 are not supported");
     }
   }
+
 }
