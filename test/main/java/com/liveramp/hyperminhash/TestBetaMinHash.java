@@ -63,16 +63,20 @@ public class TestBetaMinHash {
 
   @Test
   public void testIntersectLargeSetWithSmallSet() {
-    final int smallSetSize = 100_000;
-    final int bigSetSize = 100_000_000;
-    final double maxPctErr = 100;
-    CommonTests.testIntersectLargeSetWithSmall(
-        new BetaMinHash(),
-        BetaMinHashCombiner.getInstance(),
-        smallSetSize,
-        bigSetSize,
-        maxPctErr
-    );
+    int smallSetSize = 1_000;
+    int bigSetSize = 1_000_000;
+    for (int i = 0; i < 3; i++) {
+      final double maxPctErr = 10.0;
+      CommonTests.testIntersectLargeSetWithSmall(
+          new BetaMinHash(),
+          BetaMinHashCombiner.getInstance(),
+          smallSetSize,
+          bigSetSize,
+          maxPctErr
+      );
+      smallSetSize *= 10;
+      bigSetSize *= 10;
+    }
   }
 
   @Test

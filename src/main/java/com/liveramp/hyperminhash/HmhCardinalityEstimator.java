@@ -941,8 +941,13 @@ class HmhCardinalityEstimator implements Serializable {
       }
     }
 
-    // Proceed to calculate bias-corrected HLL estimate if we aren't using linear counting.
+    // if our bias correction tables don't have an entry for our precision value
+    // then don't attempt bias correction
+    if (p - MIN_P >= rawEstimateData.length) {
+      return basicEstimate;
+    }
 
+    // Proceed to calculate bias-corrected HLL estimate if we aren't using linear counting.
     final double[] estimatesForPrecision = rawEstimateData[p - MIN_P];
     final double[] biasesForPrecision = biasData[p - MIN_P];
     if (basicEstimate > estimatesForPrecision[estimatesForPrecision.length - 1]

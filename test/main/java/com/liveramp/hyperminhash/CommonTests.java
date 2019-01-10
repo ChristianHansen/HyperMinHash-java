@@ -124,7 +124,7 @@ class CommonTests {
 
     final Sketch smallSketch = emptySketch.deepCopy();
     for (int i = 1; i < smallSetSize; i++) {
-      smallSketch.offer(intToByteArray(i));
+      smallSketch.offer(longToByteArray((long) i));
     }
 
     final Sketch bigSketch = emptySketch.deepCopy();
@@ -139,12 +139,10 @@ class CommonTests {
     );
     final double pctError = 100 * getError(actualIntersection, expectedIntersection);
 
-    // HyperMinHash performance starts decreasing as jaccard index becomes < 1%. On a Jaccard index this small
-    // we should hope for <100% error.
     Assert.assertTrue(
         String.format(
-            "Percent error for a small jaccard index (%s) should be less than 100, but found %f",
-            expectedJaccardIndex, pctError),
+            "Percent error for a small jaccard index (%s) should be less than %f, but found %f",
+            expectedJaccardIndex, maxPctErr, pctError),
         pctError < maxPctErr
     );
   }

@@ -62,17 +62,42 @@ public class TestHyperMinHash {
   }
 
   @Test
-  public void testIntersectLargeSetWithSmallSet() {
-    final int smallSetSize = 100_000;
-    final int bigSetSize = 100_000_000;
-    final double maxPctErr = 100;
-    CommonTests.testIntersectLargeSetWithSmall(
-        new HyperMinHash(14, 35),
-        HyperMinHashCombiner.getInstance(),
-        smallSetSize,
-        bigSetSize,
-        maxPctErr
-    );
+  public void testIntersectionWithSmallJaccard() {
+    // .001 Jaccard
+    int smallSetSize = 1_000;
+    int bigSetSize = 1_000_000;
+    for (int i = 0; i < 3; i++) {
+      final double maxPctErr = 20.0;
+      CommonTests.testIntersectLargeSetWithSmall(
+          new HyperMinHash(14, 57),
+          HyperMinHashCombiner.getInstance(),
+          smallSetSize,
+          bigSetSize,
+          maxPctErr
+      );
+      smallSetSize *= 10;
+      bigSetSize *= 10;
+    }
+  }
+
+  @Test
+  public void testIntersectionWithExtremelySmallJaccard() {
+    // .0001 Jaccard
+    int smallSetSize = 1_000;
+    int bigSetSize = 10_000_000;
+    for (int i = 0; i < 2; i++) {
+      final double maxPctErr = 20.0;
+      CommonTests.testIntersectLargeSetWithSmall(
+          // make a beefy sketch since we're asking for a lot here
+          new HyperMinHash(21, 57),
+          HyperMinHashCombiner.getInstance(),
+          smallSetSize,
+          bigSetSize,
+          maxPctErr
+      );
+      smallSetSize *= 10;
+      bigSetSize *= 10;
+    }
   }
 
   @Test
