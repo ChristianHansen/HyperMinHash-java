@@ -989,7 +989,6 @@ class HmhCardinalityEstimator implements Serializable {
             rawEstimates[smallestDiffIndex] - biases[smallestDiffIndex],
             rawEstimates[secondSmallestDiffIndex] - biases[secondSmallestDiffIndex]
         })
-        .polynomialSplineDerivative()
         .value(estimate);
   }
 
