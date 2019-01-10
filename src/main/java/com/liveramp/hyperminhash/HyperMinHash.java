@@ -15,7 +15,8 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
    * as the r least significant bits in the register.
    * The number of leading zeroes in positions 2^p through 2^p + 2^q - 1 in the bitstring is stored
    * in the registers bits that are the q + 1 next least significant bits after the r least
-   * significant bits i.e. number of leading zeroes is stored in bits r through r + q - 1 of the long.
+   * significant bits i.e. number of leading zeroes is stored in bits r through r + q - 1 of the
+   * long.
    */
   final long[] registers;
   final int p; // must be at least 4
@@ -37,10 +38,12 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
   }
 
   private HyperMinHash(int p, int r, long[] registers) {
-    // Ensure that the number of registers isn't larger than the largest array java can hold in memory
-    // biggest java array can be of size Integer.MAX_VALUE
-    if (!(p > 1 && p < 31)) {
-      throw new IllegalArgumentException("precision (p) must be between 1 and 31.");
+    // Ensure that the number of registers isn't larger than the largest array java can hold in
+    // memory biggest java array can be of size Integer.MAX_VALUE
+    if (!(p >= 4 && p < 31)) {
+      throw new IllegalArgumentException(
+          "precision (p) must be between 4 (inclusive) and 31 (exclusive)."
+      );
     }
 
     // Ensure that we can pack the number of leading zeroes and the least significant r bits from
