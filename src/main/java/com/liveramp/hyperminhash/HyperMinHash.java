@@ -1,14 +1,10 @@
 package com.liveramp.hyperminhash;
 
-import com.google.common.base.Preconditions;
-import util.hash.MetroHash;
-import util.hash.MetroHash128;
 
 import java.util.Arrays;
 
 public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
 
-  // This seed should not be changed
   private static final int HASH_SEED = 1738;
 
   // used in serialization
@@ -19,7 +15,8 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
    * as the r least significant bits in the register.
    * The number of leading zeroes in positions 2^p through 2^p + 2^q - 1 in the bitstring is stored
    * in the registers bits that are the q + 1 next least significant bits after the r least
-   * significant bits i.e. number of leading zeroes is stored in bits r through r + q - 1 of the long.
+   * significant bits i.e. number of leading zeroes is stored in bits r through r + q - 1 of the
+   * long.
    */
   final long[] registers;
   final int p; // must be at least 4
@@ -27,9 +24,6 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
   // leading zero.
   final int numZeroSearchBits;
   final int r;
-
-
-  private final HmhCardinalityEstimator cardinalityEstimator;
 
   /**
    * @param p HLL precision parameter
@@ -40,22 +34,28 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
   }
 
   static HyperMinHash wrapRegisters(int p, int r, long[] registers) {
-   return new HyperMinHash(p, r, registers);
+    return new HyperMinHash(p, r, registers);
   }
 
   private HyperMinHash(int p, int r, long[] registers) {
-    // Ensure that the number of registers isn't larger than the largest array java can hold in memory
-    // biggest java array can be of size Integer.MAX_VALUE
-    Preconditions.checkArgument(p > 1 && p < 31);
+    // Ensure that the number of registers isn't larger than the largest array java can hold in
+    // memory biggest java array can be of size Integer.MAX_VALUE
+    if (!(p >= 4 && p < 31)) {
+      throw new IllegalArgumentException(
+          "precision (p) must be between 4 (inclusive) and 31 (exclusive)."
+      );
+    }
 
     // Ensure that we can pack the number of leading zeroes and the least significant r bits from
     // the hash bitstring into a long "register."
-    Preconditions.checkArgument(r > 1 && r < 58);
+    if (!(r > 1 && r < 58)) {
+      throw new IllegalArgumentException(
+          "number of bits to take for minhash (r) must be between 1 and 58.");
+    }
 
     this.p = p;
     this.numZeroSearchBits = Long.SIZE - p;
     this.r = r;
-    this.cardinalityEstimator = new HmhCardinalityEstimator();
     if (registers == null) {
       this.registers = new long[1 << p];
     } else {
@@ -65,28 +65,32 @@ public class HyperMinHash implements IntersectionSketch<HyperMinHash> {
 
   @Override
   public long cardinality() {
-    return HmhCardinalityEstimator.estimateCardinality(registers, numZeroSearchBits, r);
+    return HmhCardinalityEstimator.estimateCardinality(registers, p, r);
   }
 
   @Override
   public boolean offer(byte[] bytes) {
-    MetroHash128 hash = MetroHash.hash128(HASH_SEED, bytes);
+//    MetroHash128 hash = MetroHash.hash128(HASH_SEED, bytes);
+    final long[] hash = Murmur3.hash128(bytes);
 
-    // left half of the hash is used for HLL, right half for min hash
-    long leftHalf = hash.getHigh();
-    long rightHalf = hash.getLow();
+    // the left half of the hash is used for HLL
+    final long hllHash = hash[0];
 
-    // Unsafely cast to int because we assume p < 32
-    int registerIndex = (int) leftHalf >>> numZeroSearchBits;
+    // Unsafely cast to int because we assume numZeroSearchBits > 32
+    final int registerIndex = (int) (hllHash >>> numZeroSearchBits);
+
     // zero out leftmost p bits and find position of leftmost one
     // We add a one to the right of the zero search space just in case the entire space is zeros
-    long zeroSearchSpace = (leftHalf << p) | (1 << p - 1);
-    int leftmostOnePosition = Long.numberOfLeadingZeros(zeroSearchSpace) + 1;
+    final long zeroSearchSpace = (hllHash << p) | (long) (1 << (p - 1));
+    final int leftmostOnePosition = Long.numberOfLeadingZeros(zeroSearchSpace) + 1;
 
+    // the right half of the hash is used for min hash
+    final long hmhHash = hash[1];
     // We take the leftmost R bits as the minHash bits
-    long minHashBits = rightHalf >>> (Long.SIZE - r);
+    final long minHashBits = hmhHash >>> (Long.SIZE - r);
 
-    long incomingRegister = LongPacker.pack(leftmostOnePosition, minHashBits, r);
+    final long incomingRegister = LongPacker.pack(leftmostOnePosition, minHashBits, r);
+
     if (shouldReplace(registers[registerIndex], incomingRegister, r)) {
       registers[registerIndex] = incomingRegister;
       return true;

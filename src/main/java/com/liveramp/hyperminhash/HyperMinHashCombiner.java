@@ -4,13 +4,20 @@ import java.util.Collection;
 
 public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
 
+  private static HyperMinHashCombiner instance = new HyperMinHashCombiner();
+
+  public static HyperMinHashCombiner getInstance() {
+    return instance;
+  }
+
+  private HyperMinHashCombiner() {
+  }
+
   @Override
   public HyperMinHash union(Collection<HyperMinHash> sketches) {
     assertInputNotEmpty(sketches);
     assertParamsAreEqual(sketches);
-    final HyperMinHash firstSketch = sketches.stream()
-        .findFirst()
-        .get();
+    final HyperMinHash firstSketch = sketches.stream().findFirst().get();
     if (sketches.size() == 1) {
       return firstSketch.deepCopy();
     }
@@ -38,8 +45,12 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
 
   @Override
   public double similarity(Collection<HyperMinHash> sketches) {
-    // TODO we can maybe make an abstract class that exposes a similarityInternal(registers, p,q,r)
-    // TODO which is shared between combiners
+    // TODO this similarity estimation does not take into account expected collisions
+    // because it is too slow in practice, and the approximation algorithm presented
+    // in algorithm 2.1.6 (Yu & Weber) does not generalize to more than 2 sketches
+
+    // TODO make an abstract class that exposes a similarityInternal(registers, p,q,r)
+    // which is shared between combiners
     // Algorithm 2.1.4 in HyperMinHash paper
     assertInputNotEmpty(sketches);
     assertParamsAreEqual(sketches);
@@ -50,17 +61,16 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
 
     long c = 0;
     long n = 0;
-    final HyperMinHash firstSketch = sketches.stream()
-        .findFirst()
-        .get();
+    final HyperMinHash firstSketch = sketches.stream().findFirst().get();
     long numRegisters = firstSketch.registers.length;
-
+    int r = firstSketch.r;
     for (int i = 0; i < numRegisters; i++) {
       if (firstSketch.registers[i] != 0) {
         boolean itemInIntersection = true;
         for (HyperMinHash sketch : sketches) {
-          itemInIntersection =
-              itemInIntersection && firstSketch.registers[i] == sketch.registers[i];
+          itemInIntersection = itemInIntersection &&
+              LongPacker.unpackMantissa(firstSketch.registers[i], r) == LongPacker
+                  .unpackMantissa(sketch.registers[i], r);
         }
 
         if (itemInIntersection) {
@@ -86,16 +96,11 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
       cardinalities[i++] = sk.cardinality();
     }
 
-    int p = firstSketch.p;
-    int numZeroSearchBits = firstSketch.numZeroSearchBits;
-    int r = firstSketch.r;
-    double numExpectedCollisions = expectedCollision(p, numZeroSearchBits, r, cardinalities);
-
-    if (c < numExpectedCollisions) {
+    if (n == 0) {
       return 0;
     }
 
-    return (c - numExpectedCollisions) / (double) n;
+    return c / (double) n;
   }
 
   // algorithm 2.1.5 in the HyperMinHash paper
@@ -136,9 +141,7 @@ public class HyperMinHashCombiner implements SketchCombiner<HyperMinHash> {
    * @param sketches input sketches
    */
   private void assertParamsAreEqual(Collection<HyperMinHash> sketches) {
-    final HyperMinHash firstSketch = sketches.stream()
-        .findFirst()
-        .get();
+    final HyperMinHash firstSketch = sketches.stream().findFirst().get();
 
     int p = firstSketch.p;
     int numZeroSearchBits = firstSketch.numZeroSearchBits;
