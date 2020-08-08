@@ -14,9 +14,10 @@ public class TestBetaMinHash {
 
   @Test
   public void testCardinality() {
+
     final int maxUniqueElements = 10_000_000;
     final int minTestCardinality = 10_000;
-    final double pctErr = 2.0;
+    final double pctErr = 3.0;
     RandomTestRunner.runRandomizedTest(
         3,
         (random) -> CommonTests.testCardinality(
@@ -32,7 +33,7 @@ public class TestBetaMinHash {
   public void testUnion() {
     final BetaMinHashCombiner combiner = BetaMinHashCombiner.getInstance();
     final int elementsPerSketch = 1_500_000;
-    final double pctErr = 2.0;
+    final double pctErr = 3.0;
     RandomTestRunner.runRandomizedTest(
         3,
         (random) -> CommonTests.testUnion(
@@ -62,6 +63,7 @@ public class TestBetaMinHash {
   }
 
   @Test
+
   public void testIntersectLargeSetWithSmallSet() {
     int smallSetSize = 1_000;
     int bigSetSize = 1_000_000;
@@ -91,19 +93,5 @@ public class TestBetaMinHash {
         initialIntersectionSize,
         numIter
     );
-
   }
-
-  @Test
-  public void testToFromBytes() {
-    final BetaMinHash original = new BetaMinHash();
-    original.offer("test data".getBytes());
-
-//    final byte[] serialized = original.getBytes();
-//    final BetaMinHash deSerialized = BetaMinHash.fromBytes(serialized);
-
-//    Assert.assertEquals(original, deSerialized);
-  }
-
-
 }
